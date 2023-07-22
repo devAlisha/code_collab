@@ -76,6 +76,11 @@ io.on("connection", (socket) => {
         socketId: socket.id,
       });
     });
+    socket.on("code-change", ({code , roomId }) => {
+      socket.broadcast .emit("code-change", { code });
+    });
+    
+       
     console.log(clients);
     socket.on("disconnect", () => {
       const rooms = [...(io.sockets.adapter.rooms.get(roomId) || [])];

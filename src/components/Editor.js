@@ -1,4 +1,4 @@
-import React, { useEffect} from 'react'
+import React, { useEffect, useRef} from 'react'
 import Codemirror from 'codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/dracula.css'
@@ -7,12 +7,13 @@ import 'codemirror/addon/edit/closebrackets'
 import 'codemirror/addon/edit/matchbrackets'
 import 'codemirror/addon/edit/closetag'
 import 'codemirror/addon/edit/matchtags'
+ 
 
-
-function Editor() {
+function Editor({socketRef,roomId,onCodeChange}) {
+    const editorRef = useRef(null);
     useEffect(() => {
         async function init() {
-           Codemirror.fromTextArea(
+           editorRef.current=Codemirror.fromTextArea(
                 document.getElementById('realtimeEditor'),
                 {
                     mode: { name: 'javascript', json: true },
@@ -23,12 +24,34 @@ function Editor() {
 
                 }
             );
-
+            editorRef.current.on('change', (editor,changes) => {
+                const code=editor.getValue();
+                console.log('changes: ',changes); 
+                const {origin}=changes;
+                onCodeChange(code);
+                if(origin!=='setValue'){
+                    socketRef.current.emit('code-change',{code,roomId});
+                }
+                console.log('code: ',code);
+            }
+            );
+            
             
         }
-            
+             
         init();
     }, []);
+    useEffect(() => {
+        if(socketRef.current){
+            socketRef.current.on('code-change',({code})=>{
+                if(code!==null)
+                editorRef.current.setValue(code);
+            });
+            return () => {
+                socketRef.current.off('code-change');
+            }
+        }
+    }, [socketRef.current]);
 
   return (
      <textarea id="realtimeEditor" defaultValue=""></textarea>

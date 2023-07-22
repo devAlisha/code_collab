@@ -18,6 +18,7 @@ function EditorPage() {
   const reactNavigator = useNavigate();
   const { roomId } = useParams();
   console.log(roomId);
+  const codeRef=useRef(null);
   useEffect(() => {
     const init = async () => {
       socketRef.current = await initSocket();
@@ -41,12 +42,18 @@ function EditorPage() {
         username: location.state?.username,
       });
       socketRef.current.on("new-user", ({ clients, username, socketId }) => {
-        if (username === location.state?.username) {
+        if (username !== location.state?.username) {
           toast.success(`${username} joined room ${roomId}`);
           console.log(`${username} joined room ${roomId}`);
         }
         setClients(clients);
+        socketRef.current.on("code-sync",{
+          code:codeRef.current,
+          socketId
+              
+        });
       });
+
       socketRef.current.on("user-disconnected", ({ socketId, username }) => {
         toast.error(`${username} left room ${roomId}`);
         setClients((prev) => {
@@ -71,6 +78,20 @@ function EditorPage() {
   if (!location.state) {
     return <Navigate to="/" />;
   }
+   async function copyRoomId() {
+    try
+    {
+      await navigator.clipboard.writeText(roomId);
+      toast.success("Room ID copied to clipboard");
+    }
+    catch(err)
+    {
+      toast.error("Failed to copy room ID to clipboard");
+    }
+  }
+async function leaveRoom() {
+  reactNavigator("/");
+}
   // const socketRef = useRef(null);
 
   // useEffect(() => {
@@ -111,12 +132,12 @@ function EditorPage() {
           </div>
         </div>
 
-        <button className="btn copyBtn">Copy ROOM ID</button>
-        <button className="btn leaveBtn">Leave</button>
+        <button className="btn copyBtn" onClick={copyRoomId}>Copy ROOM ID</button>
+        <button className="btn leaveBtn" onClick={leaveRoom}>Leave</button>
       </div>
 
       <div className="editorWrap">
-        <Editor />
+        <Editor socketRef ={socketRef} roomId={roomId} onCodeChange={(code)=>{codeRef.current=code}}/>
       </div>
     </div>
   );
