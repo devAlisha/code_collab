@@ -6,5 +6,6 @@ export const initSocket = async () => {
     reconnectionAttempt: "Infinity",
     transports: ["websocket"],
   };
-  return io("http://localhost:8000", options);
+  const serverUrl = process.env.REACT_APP_SERVER_URL;
+  return io(serverUrl, options);
 };
