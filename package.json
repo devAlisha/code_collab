@@ -27,7 +27,7 @@
   },
   "scripts": {
     "start": "concurrently \"npm run start-server\" \"npm run start-client\"",
-    "start-server": "node server.js",
+    "start-server": "node Server.js",
     "start-client": "react-scripts start"
   },
   "eslintConfig": {
